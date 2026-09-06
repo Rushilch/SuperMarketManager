@@ -1,0 +1,202 @@
+// =============================================================================
+// Supermarket Inventory & POS Management System - Prisma Schema
+// =============================================================================
+// This schema defines the relational data model for products, customers,
+// POS orders, line items, audit-trailed stock movements, user credentials,
+// and inbound/outbound delivery management (item delivery & stock refill).
+// =============================================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -----------------------------------------------------------------------------
+// ENUMS
+// -----------------------------------------------------------------------------
+
+/// User permission roles:
+/// - admin: Full privileges (manage products, users, stock, and orders)
+/// - staff: Operational privileges (view products, create & manage orders)
+/// - cashier: Fast POS checkout, barcode scanning, customer phone registration
+enum Role {
+  admin
+  staff
+  cashier
+}
+
+/// Order lifecycle status states:
+/// - draft: Initial order state
+/// - confirmed: Order confirmed by cashier/staff; stock allocated
+/// - shipped: Order fulfilled and dispatched
+/// - cancelled: Order cancelled; allocated stock is reversed back to inventory
+enum OrderStatus {
+  draft
+  confirmed
+  shipped
+  cancelled
+}
+
+/// Supermarket order fulfillment channel:
+/// - pos_checkout: In-store immediate cashier counter checkout
+/// - item_delivery: Home delivery of supermarket products to customer address
+enum OrderType {
+  pos_checkout
+  item_delivery
+}
+
+/// Outbound delivery lifecycle state for item delivery orders:
+/// - not_applicable: In-store carryout / POS orders
+/// - pending: Placed and waiting for packing / driver assignment
+/// - out_for_delivery: Dispatched with courier / delivery agent
+/// - delivered: Completed delivery receipt confirmed
+/// - failed: Delivery unsuccessful
+enum DeliveryStatus {
+  not_applicable
+  pending
+  out_for_delivery
+  delivered
+  failed
+}
+
+/// Reason for a physical inventory adjustment:
+/// - order: Stock deducted due to customer POS order or delivery
+/// - restock: Stock added through incoming warehouse or supplier refill
+/// - adjustment: Manual correction, scrap, or cancellation restoration
+enum MovementReason {
+  order
+  restock
+  adjustment
+}
+
+// -----------------------------------------------------------------------------
+// MODELS
+// -----------------------------------------------------------------------------
+
+/// Registered application users with hashed credentials and role assignments.
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(staff)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+/// Supermarket catalog products.
+/// Tracks physical stock, barcode (EAN-13/UPC), category, and reorder thresholds.
+model Product {
+  id               Int             @id @default(autoincrement())
+  name             String
+  sku              String          @unique
+  barcode          String?         @unique
+  category         String?         @default("General")
+  description      String?         @db.Text
+  unitPrice        Decimal         @map("unit_price") @db.Decimal(10, 2)
+  quantityInStock  Int             @default(0) @map("quantity_in_stock")
+  reorderThreshold Int             @default(10) @map("reorder_threshold")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  orderItems       OrderItem[]
+  stockMovements   StockMovement[]
+  refillItems      StockRefillItem[]
+
+  @@map("products")
+}
+
+/// Customer profiles indexed by mobile number for fast POS cashier lookups.
+model Customer {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String?  @unique
+  phone         String?  @unique
+  address       String?  @db.Text
+  loyaltyPoints Int      @default(0) @map("loyalty_points")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  orders        Order[]
+
+  @@map("customers")
+}
+
+/// Supermarket orders placed either at cashier POS or as item home deliveries.
+model Order {
+  id              Int            @id @default(autoincrement())
+  customerId      Int            @map("customer_id")
+  customer        Customer       @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  status          OrderStatus    @default(draft)
+  orderType       OrderType      @default(pos_checkout) @map("order_type")
+  deliveryStatus  DeliveryStatus @default(not_applicable) @map("delivery_status")
+  deliveryAddress String?        @map("delivery_address") @db.Text
+  deliveryNotes   String?        @map("delivery_notes") @db.Text
+  cashierId       Int?           @map("cashier_id")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  items           OrderItem[]
+
+  @@map("orders")
+}
+
+/// Individual line items belonging to an Order.
+model OrderItem {
+  id               Int      @id @default(autoincrement())
+  orderId          Int      @map("order_id")
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId        Int      @map("product_id")
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity         Int
+  unitPriceAtOrder Decimal  @map("unit_price_at_order") @db.Decimal(10, 2)
+
+  @@map("order_items")
+}
+
+/// Immutable audit log of all inventory changes.
+model StockMovement {
+  id             Int            @id @default(autoincrement())
+  productId      Int            @map("product_id")
+  product        Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  changeQuantity Int            @map("change_quantity")
+  reason         MovementReason
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  @@map("stock_movements")
+}
+
+/// Inbound supplier stock refill delivery to replenish supermarket inventory.
+model StockRefill {
+  id           Int               @id @default(autoincrement())
+  referenceNo  String            @unique @map("reference_no")
+  supplierName String            @map("supplier_name")
+  status       String            @default("received")
+  notes        String?           @db.Text
+  receivedBy   String?           @map("received_by")
+  totalItems   Int               @default(0) @map("total_items")
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  items        StockRefillItem[]
+
+  @@map("stock_refills")
+}
+
+/// Individual items received in an inbound stock refill delivery.
+model StockRefillItem {
+  id        Int         @id @default(autoincrement())
+  refillId  Int         @map("refill_id")
+  refill    StockRefill @relation(fields: [refillId], references: [id], onDelete: Cascade)
+  productId Int         @map("product_id")
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+  costPrice Decimal?    @map("cost_price") @db.Decimal(10, 2)
+
+  @@map("stock_refill_items")
+}

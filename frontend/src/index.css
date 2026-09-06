@@ -1,0 +1,111 @@
+﻿@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/inter/900.css";
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Neobrutalism Palette */
+  --color-neo-yellow: var(--neo-yellow);
+  --color-neo-cyan: var(--neo-cyan);
+  --color-neo-pink: var(--neo-pink);
+  --color-neo-lime: var(--neo-lime);
+  --color-neo-purple: var(--neo-purple);
+  --color-neo-bg: var(--neo-bg);
+  --color-neo-surface: var(--neo-surface);
+  --color-neo-card: var(--neo-card);
+  --color-neo-text: var(--neo-text);
+  --color-neo-muted: var(--neo-muted);
+  --color-neo-border: var(--neo-border);
+
+  /* Signature Neobrutalist Hard Shadows */
+  --shadow-neo-sm: 2px 2px 0px var(--neo-shadow);
+  --shadow-neo: 4px 4px 0px var(--neo-shadow);
+  --shadow-neo-lg: 6px 6px 0px var(--neo-shadow);
+  --shadow-neo-xl: 8px 8px 0px var(--neo-shadow);
+  --shadow-neo-yellow: 4px 4px 0px #FFE600;
+  --shadow-neo-cyan: 4px 4px 0px #00F0FF;
+  --shadow-neo-pink: 4px 4px 0px #FF4365;
+}
+
+/* Light Mode (Classic Warm Cream Neobrutalism) */
+:root {
+  color-scheme: light;
+  --neo-bg: #FFFDF5;
+  --neo-surface: #FFFFFF;
+  --neo-card: #FFFFFF;
+  --neo-text: #000000;
+  --neo-muted: #52525B;
+  --neo-border: #000000;
+  --neo-shadow: #000000;
+
+  --neo-yellow: #FFE600;
+  --neo-cyan: #00F0FF;
+  --neo-pink: #FF4365;
+  --neo-lime: #00FF66;
+  --neo-purple: #A855F7;
+}
+
+/* Dark Mode (High-Voltage Obsidian Neobrutalism) */
+.dark {
+  color-scheme: dark;
+  --neo-bg: #0F0F12;
+  --neo-surface: #18181C;
+  --neo-card: #1F1F24;
+  --neo-text: #FFFFFF;
+  --neo-muted: #A1A1AA;
+  --neo-border: #000000;
+  --neo-shadow: #000000;
+
+  --neo-yellow: #FFE600;
+  --neo-cyan: #00F0FF;
+  --neo-pink: #FF4365;
+  --neo-lime: #00FF66;
+  --neo-purple: #C084FC;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background-color: var(--neo-bg);
+  color: var(--neo-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Neobrutalist Hard Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neo-bg);
+  border-left: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neo-yellow);
+  border: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neo-cyan);
+}
+
+/* Vibrant Selection */
+::selection {
+  background-color: var(--neo-yellow);
+  color: #000000;
+}
