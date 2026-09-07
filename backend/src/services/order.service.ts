@@ -256,8 +256,10 @@ export async function updateOrderStatus(orderId: number, nextStatus: OrderStatus
   });
 }
 
-export async function getAllOrders(status?: OrderStatus) {
-  const where = status ? { status } : {};
+export async function getAllOrders(status?: OrderStatus, orderType?: OrderType) {
+  const where: any = {};
+  if (status) where.status = status;
+  if (orderType) where.orderType = orderType;
   return prisma.order.findMany({
     where,
     orderBy: { createdAt: 'desc' },

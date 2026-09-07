@@ -34,6 +34,7 @@ export const DeliveriesPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [orderSearch, setOrderSearch] = useState('');
   const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
+  const [deliveryError, setDeliveryError] = useState<string | null>(null);
 
   // Stock refills state
   const [refills, setRefills] = useState<StockRefill[]>([]);
@@ -55,11 +56,7 @@ export const DeliveriesPage: React.FC = () => {
   const loadItemDeliveries = async () => {
     setLoadingOrders(true);
     try {
-      const allOrders = await getOrdersApi();
-      // Filter orders that are item home deliveries
-      const deliveries = allOrders.filter(
-        (o) => o.orderType === 'item_delivery' || o.deliveryStatus !== 'not_applicable'
-      );
+      const deliveries = await getOrdersApi(undefined, 'item_delivery');
       setOrders(deliveries);
     } catch (err) {
       console.error('Failed to load item deliveries:', err);
@@ -89,11 +86,12 @@ export const DeliveriesPage: React.FC = () => {
   // Update item delivery status
   const handleUpdateDeliveryStatus = async (orderId: number, nextStatus: DeliveryStatus) => {
     try {
+      setDeliveryError(null);
       setUpdatingOrderId(orderId);
       const updated = await updateDeliveryStatusApi(orderId, nextStatus);
       setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update delivery status');
+      setDeliveryError(err.response?.data?.message || 'Failed to update delivery status');
     } finally {
       setUpdatingOrderId(null);
     }
@@ -161,6 +159,23 @@ export const DeliveriesPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
+      {/* Error Alert */}
+      {deliveryError && (
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-neo-pink p-4 text-xs text-white font-bold border-3 border-black shadow-neo">
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="h-5 w-5 shrink-0" />
+            <span>{deliveryError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDeliveryError(null)}
+            className="rounded-lg p-1 hover:bg-black/20 text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-3 border-black pb-6 bg-neo-card p-4 sm:p-6 rounded-2xl border-3 shadow-neo">
         <div>

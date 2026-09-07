@@ -1,8 +1,14 @@
 import { api } from './client';
 import { Order, OrderStatus, OrderType, DeliveryStatus, DashboardStats } from '../types';
 
-export async function getOrdersApi(status?: OrderStatus): Promise<Order[]> {
-  const res = await api.get('/orders', { params: status ? { status } : {} });
+export async function getOrdersApi(
+  status?: OrderStatus,
+  orderType?: OrderType
+): Promise<Order[]> {
+  const params: Record<string, any> = {};
+  if (status) params.status = status;
+  if (orderType) params.orderType = orderType;
+  const res = await api.get('/orders', { params });
   return res.data.data;
 }
 

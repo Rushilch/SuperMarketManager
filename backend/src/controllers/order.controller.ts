@@ -32,7 +32,8 @@ export const updateDeliveryStatusSchema = z.object({
 export async function getAll(req: Request, res: Response, next: NextFunction) {
   try {
     const status = req.query.status as OrderStatus | undefined;
-    const orders = await orderService.getAllOrders(status);
+    const orderType = req.query.orderType as OrderType | undefined;
+    const orders = await orderService.getAllOrders(status, orderType);
     res.json({ status: 'success', data: orders });
   } catch (error) {
     next(error);

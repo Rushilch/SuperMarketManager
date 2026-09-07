@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { DashboardPage } from '../pages/DashboardPage';
 import { AuthProvider } from '../context/AuthContext';
@@ -32,7 +32,7 @@ describe('DashboardPage Component (Neobrutalism)', () => {
     vi.mocked(orderApi.getOrdersApi).mockReturnValue(new Promise(() => {}));
 
     renderWithProviders(<DashboardPage />);
-    expect(screen.getByText(/loading erp operations data/i)).toBeInTheDocument();
+    expect(screen.getByText(/loading supermarket operations data/i)).toBeInTheDocument();
   });
 
   it('renders all four telemetry metric cards upon load', async () => {
@@ -47,11 +47,11 @@ describe('DashboardPage Component (Neobrutalism)', () => {
     renderWithProviders(<DashboardPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Catalog SKUs')).toBeInTheDocument();
+      expect(screen.getByText('Store Products')).toBeInTheDocument();
       expect(screen.getByText('42')).toBeInTheDocument();
-      expect(screen.getByText('Low Stock Alerts')).toBeInTheDocument();
+      expect(screen.getByText('Low Stock Warnings')).toBeInTheDocument();
       expect(screen.getByText('3')).toBeInTheDocument();
-      expect(screen.getByText('Total Orders')).toBeInTheDocument();
+      expect(screen.getByText('Total Sales')).toBeInTheDocument();
       expect(screen.getByText('150')).toBeInTheDocument();
       expect(screen.getByText('Monthly Volume')).toBeInTheDocument();
       expect(screen.getByText('18')).toBeInTheDocument();

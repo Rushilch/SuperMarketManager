@@ -187,4 +187,26 @@ export const OrdersPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-xs font-mono text-neo-muted">
                         {new Date(order.createdAt).toLocaleDateString(undefined, {
-                          mont
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link to={`/orders/${order.id}`}>
+                          <Button variant="secondary" size="sm" icon={<Eye className="h-3.5 w-3.5" />}>
+                            Details
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

@@ -24,6 +24,7 @@ export const OrderDetailPage: React.FC = () => {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const loadOrder = async () => {
     if (!id) return;
@@ -44,12 +45,14 @@ export const OrderDetailPage: React.FC = () => {
   const handleStatusChange = async (nextStatus: OrderStatus) => {
     if (!order) return;
     if (nextStatus === 'cancelled') {
-      const confirmCancel = window.confirm(
-        'Cancel this order? This triggers an atomic database transaction that restores allocated physical stock back to inventory.'
-      );
-      if (!confirmCancel) return;
+      setShowCancelModal(true);
+      return;
     }
+    await executeStatusUpdate(nextStatus);
+  };
 
+  const executeStatusUpdate = async (nextStatus: OrderStatus) => {
+    if (!order) return;
     try {
       setUpdating(true);
       setError(null);
@@ -65,6 +68,7 @@ export const OrderDetailPage: React.FC = () => {
       setError(err.message || 'Failed to update order status');
     } finally {
       setUpdating(false);
+      setShowCancelModal(false);
     }
   };
 
@@ -227,11 +231,21 @@ export const OrderDetailPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="border-t-2 border-black pt-4 mt-4 flex justify-between items-baseline">
-            <span className="text-xs font-black uppercase text-neo-muted">Grand Total:</span>
-            <span className="text-3xl font-black font-mono text-neo-text">
-              ${orderTotal.toFixed(2)}
-            </span>
+          <div className="border-t-2 border-black pt-4 mt-4 space-y-1">
+            <div className="flex justify-between items-center text-xs font-bold text-neo-muted">
+              <span className="uppercase">Net Subtotal:</span>
+              <span className="font-mono text-sm font-black text-neo-text">${orderTotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs font-bold text-neo-muted">
+              <span className="uppercase">Est. Tax (5% at POS):</span>
+              <span className="font-mono text-sm font-black text-neo-text">${(orderTotal * 0.05).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-baseline border-t border-black/20 pt-2 mt-1">
+              <span className="text-xs font-black uppercase text-neo-text">Estimated Total:</span>
+              <span className="text-2xl font-black font-mono text-neo-text">
+                ${(orderTotal * 1.05).toFixed(2)}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -282,6 +296,51 @@ export const OrderDetailPage: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Neobrutalist Confirmation Modal for Cancellation */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-md rounded-3xl bg-neo-card border-4 border-black p-6 shadow-neo-xl space-y-4">
+            <div className="flex items-center gap-3 border-b-2 border-black pb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neo-pink text-white border-2 border-black shadow-neo-sm">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-tight text-neo-text">
+                  Cancel Order #{order.id.toString().padStart(4, '0')}?
+                </h3>
+                <p className="text-xs text-neo-muted font-bold">Atomic Inventory Reversal</p>
+              </div>
+            </div>
+
+            <p className="text-sm font-medium text-neo-text">
+              Are you sure you want to cancel this order? This triggers an atomic database transaction that reverses and restores all allocated physical stock back to on-hand supermarket inventory.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                disabled={updating}
+                onClick={() => setShowCancelModal(false)}
+              >
+                No, Keep Order
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                size="md"
+                loading={updating}
+                icon={<RotateCcw className="h-4 w-4" />}
+                onClick={() => executeStatusUpdate('cancelled')}
+              >
+                Yes, Cancel & Revert
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

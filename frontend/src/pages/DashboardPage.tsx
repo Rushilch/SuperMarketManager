@@ -232,4 +232,23 @@ export const DashboardPage: React.FC = () => {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
-                        minute: '2-digit
+                        minute: '2-digit',
+                      })}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link to={`/orders/${order.id}`}>
+                        <Button variant="secondary" size="sm">
+                          Inspect
+                        </Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

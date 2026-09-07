@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_routes_1 = __importDefault(require("./auth.routes"));
+const product_routes_1 = __importDefault(require("./product.routes"));
+const customer_routes_1 = __importDefault(require("./customer.routes"));
+const order_routes_1 = __importDefault(require("./order.routes"));
+const refill_routes_1 = __importDefault(require("./refill.routes"));
+const auth_1 = require("../middleware/auth");
+const order_controller_1 = require("../controllers/order.controller");
+const router = (0, express_1.Router)();
+router.use('/auth', auth_routes_1.default);
+router.use('/products', product_routes_1.default);
+router.use('/customers', customer_routes_1.default);
+router.use('/orders', order_routes_1.default);
+router.use('/refills', refill_routes_1.default);
+router.get('/dashboard/stats', auth_1.authenticate, order_controller_1.getDashboard);
+exports.default = router;
